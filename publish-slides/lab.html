@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#002060">
+  <meta name="description" content="Run synchronous 3-Majority and 2-Choices live. Compare balanced and unbalanced populations with the same maximum initial opinion density.">
+  <title>Consensus Live · Simulator Playground</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="engine.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <main class="app">
+    <header class="masthead">
+      <a class="brand" href="#compare" aria-label="Consensus Live, comparison view"><span class="brand-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>CONSENSUS <b>LIVE</b></a>
+      <div class="header-right"><span class="conference">DISC 2026 <span>·</span> Niccolò D’Archivio</span><button id="fullscreen" class="icon-button" aria-label="Enter fullscreen" title="Fullscreen (F)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button></div>
+    </header>
+
+    <div class="intro">
+      <div><p class="eyebrow" id="eyebrow">THE INITIAL DISTRIBUTION</p><h1 id="view-title">Same maximum. <span>Different distributions.</span></h1><p id="view-subtitle" class="subtitle">Change everything around the largest opinion. What happens to consensus?</p></div>
+      <nav class="view-nav" aria-label="Simulation views">
+        <button data-view="compare" class="active" aria-current="page"><small>01</small> Compare</button>
+        <button data-view="round"><small>02</small> One round</button>
+        <button data-view="proof"><small>03</small> Proof intuition</button>
+      </nav>
+    </div>
+
+    <section class="toolbar" aria-label="Simulation controls">
+      <div class="control-group protocol-control"><span class="control-label">PROTOCOL</span><div class="segmented" role="group" aria-label="Protocol"><button data-protocol="3majority" aria-pressed="true" class="active">3-Majority</button><button data-protocol="2choices" aria-pressed="false">2-Choices</button></div></div>
+      <label class="control-group"><span class="control-label">AGENTS</span><select id="population"><option value="64">64</option><option value="100" selected>100</option><option value="400">400</option><option value="1600">1,600</option></select></label>
+      <label class="control-group seed-group"><span class="control-label">SEED</span><input id="seed" type="number" min="0" max="4294967295" step="1" value="2026" aria-label="Random seed"></label>
+      <label class="control-group" id="speed-group"><span class="control-label">SPEED</span><select id="speed"><option value="1">1 round / s</option><option value="4" selected>4 rounds / s</option><option value="8">8 rounds / s</option><option value="16">16 rounds / s</option></select></label>
+      <div class="transport"><button id="reset" class="button secondary" title="Reset the same random seed (R)"><span aria-hidden="true">↺</span> Reset</button><button id="step" class="button secondary" title="Advance one round (Right arrow)">Step <span aria-hidden="true">→</span></button><button id="play" class="button primary" title="Run or pause (Space)"><span aria-hidden="true">▶</span> Run</button></div>
+    </section>
+
+    <section id="compare-view" class="view active" aria-label="Balanced and unbalanced comparison">
+      <div class="comparison-grid">
+        <article class="population-panel" id="balanced-panel">
+          <div class="panel-heading"><div><div class="panel-kicker">INITIAL CONFIGURATION A</div><h2>Balanced</h2></div><span class="round-badge" id="balanced-round">Round 0</span></div>
+          <p class="configuration-description" id="balanced-description"></p>
+          <div class="initial-stats" id="balanced-initial"></div>
+          <div class="plot-heading"><span>AGENTS</span><span class="muted">Position has no effect</span></div>
+          <canvas id="balanced-agents" class="agents-canvas" tabindex="0" aria-label="Colored agents in the balanced population"></canvas>
+          <div class="plot-heading"><span>OPINION DENSITIES</span><span class="muted">Largest first · shared scale</span></div>
+          <canvas id="balanced-histogram" class="histogram-canvas" tabindex="0" aria-label="Opinion-density histogram of the balanced population"></canvas>
+          <div class="live-stats" id="balanced-live"></div>
+        </article>
+        <article class="population-panel" id="unbalanced-panel">
+          <div class="panel-heading"><div><div class="panel-kicker">INITIAL CONFIGURATION B</div><h2>Unbalanced</h2></div><span class="round-badge" id="unbalanced-round">Round 0</span></div>
+          <p class="configuration-description" id="unbalanced-description"></p>
+          <div class="initial-stats" id="unbalanced-initial"></div>
+          <div class="plot-heading"><span>AGENTS</span><span class="muted">Each singleton is a distinct opinion</span></div>
+          <canvas id="unbalanced-agents" class="agents-canvas" tabindex="0" aria-label="Colored agents in the unbalanced population"></canvas>
+          <div class="plot-heading"><span>OPINION DENSITIES</span><span class="muted">Largest first · shared scale</span></div>
+          <canvas id="unbalanced-histogram" class="histogram-canvas" tabindex="0" aria-label="Opinion-density histogram of the unbalanced population"></canvas>
+          <div class="live-stats" id="unbalanced-live"></div>
+        </article>
+      </div>
+      <div class="takeaway"><span class="takeaway-symbol">m<sub>0</sub></span><div><strong>The same initial maximum in both populations.</strong><p id="comparison-note">The theorem matches consensus times up to logarithmic factors. Individual runs can finish at different rounds.</p></div><div class="run-status" id="run-status" role="status" aria-live="polite">Ready to compare</div></div>
+    </section>
+
+    <section id="round-view" class="view" aria-label="Inspect one synchronous round" hidden>
+      <div class="tutorial-grid">
+        <article class="population-panel tutorial-population">
+          <div class="panel-heading"><div><div class="panel-kicker">ONE AGENT’S VIEW OF A ROUND</div><h2>Sample, then update.</h2></div><span class="round-badge" id="tutorial-round">Round 0</span></div>
+          <div class="tutorial-settings"><label>Start <select id="tutorial-config"><option value="balanced">Balanced</option><option value="unbalanced">Unbalanced</option></select></label><label>Inspect agent <input id="target" type="number" min="1" max="100" value="1"></label></div>
+          <canvas id="tutorial-agents" class="tutorial-canvas" tabindex="0" aria-label="Agent population; click an agent to inspect its next update"></canvas>
+          <p class="canvas-caption">Click an agent to inspect it. Every agent samples from the whole population, including itself.</p>
+        </article>
+        <article class="explanation-panel">
+          <p class="panel-kicker">THE UPDATE RULE</p><h2 id="tutorial-rule-title">Three samples. One opinion.</h2>
+          <p id="tutorial-rule" class="rule-text"></p>
+          <div class="sample-label" id="sample-label">SAMPLES FROM THE CURRENT ROUND</div>
+          <div id="samples" class="samples"></div>
+          <div class="outcome" id="tutorial-outcome">Draw samples to inspect the next update.</div>
+          <div class="agent-change" id="agent-change"></div>
+          <div class="synchronous-note"><strong>All updates happen together.</strong><p>Sampling reads the current configuration. “Apply round” commits every agent’s new opinion simultaneously.</p></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="proof-view" class="view" aria-label="Proof intuition and evolving statistics" hidden>
+      <div class="proof-grid">
+        <article class="population-panel">
+          <div class="panel-heading"><div><div class="panel-kicker">STARTING FROM THE UNBALANCED POPULATION</div><h2>A largest opinion grows.</h2></div><span class="round-badge" id="proof-round">Round 0</span></div>
+          <div class="plot-heading"><span>AGENTS</span><span class="muted">Same run as the comparison</span></div>
+          <canvas id="proof-agents" class="agents-canvas proof-agents" tabindex="0" aria-label="Agents in the unbalanced simulation"></canvas>
+          <div class="plot-heading"><span>OPINION DENSITIES</span><span class="muted">Largest first</span></div>
+          <canvas id="proof-histogram" class="histogram-canvas" aria-label="Current unbalanced simulation histogram"></canvas>
+          <div class="live-stats" id="proof-live"></div>
+        </article>
+        <article class="proof-explanation">
+          <div class="chart-top"><h2>Maximum & collision probability</h2><div class="chart-legend"><span><i class="line-m"></i>m<sub>t</sub></span><span><i class="line-gamma"></i>γ<sub>t</sub></span></div></div>
+          <canvas id="history" class="history-canvas" aria-label="History of maximum opinion density and collision probability"></canvas>
+          <div class="drift-condition"><span id="regime" class="regime"></span><span class="math" id="ratio"></span></div>
+          <div class="proof-formula"><span class="formula-label">SAME EXPECTED UPDATE FOR BOTH PROTOCOLS</span><div class="math">E[p<sub>i</sub>(t + 1) | p(t)] = p<sub>i</sub>(1 + p<sub>i</sub> − γ<sub>t</sub>)</div></div>
+          <p class="proof-copy">If <span class="math">m<sub>t</sub> ≥ 2γ<sub>t</sub></span>, a current largest opinion has expected growth factor at least <span class="math">1 + m<sub>t</sub>/2</span>. The trajectory fluctuates; the proof controls those fluctuations.</p>
+          <div class="proof-chain"><span>Growth while unbalanced</span><b>→</b><span>Comparable m and γ</span><b>→</b><span>SS25 bound</span></div>
+        </article>
+      </div>
+    </section>
+
+    <footer><span><i class="live-dot"></i> Computed live · synchronous rounds · independent sampling with replacement</span><span class="keyboard-help"><kbd>Space</kbd> run / pause <kbd>→</kbd> step <kbd>R</kbd> reset <kbd>F</kbd> fullscreen</span><button id="about-button" class="text-button">Model & controls</button></footer>
+    <p class="accessible-status" id="announcement" role="status" aria-live="polite"></p>
+  </main>
+  <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+  <dialog id="about"><button id="close-about" class="icon-button dialog-close" aria-label="Close model information">×</button><p class="eyebrow">MODEL & CONTROLS</p><h2>Actual agents. Actual random samples.</h2><p>Every round, all agents independently sample uniformly from all n agents, with replacement and self-sampling. They read the configuration at the start of the round and update simultaneously.</p><p><strong>3-Majority:</strong> sample three agents, adopt the majority opinion, and choose uniformly among the three opinions when all differ.</p><p><strong>2-Choices:</strong> sample two agents. Adopt their opinion if they agree; otherwise retain the current opinion.</p><p>The seeded pseudorandom generator makes Reset reproduce the same run. The two comparison panels use separate random streams. A panel freezes when it reaches consensus; the other continues. One run illustrates behavior, not an asymptotic bound.</p><p>Bars are ranked by current size. Colors stay attached to opinion identities. Every singleton has its own identity, even when shades look similar. The dashed histogram line is the <em>initial</em> maximum; its value stays fixed. Both comparison histograms share a vertical scale, which expands together as needed.</p><p>In the proof view, “comparable densities” means m &lt; 2γ, the threshold used for this demonstration. It is an operational threshold for the broader asymptotic notion of balance.</p><p><strong>Keyboard:</strong> Space runs or pauses; Right Arrow advances a round; R resets; F toggles fullscreen; 1, 2, 3 switch views. In One round, Space alternates sampling and applying the round.</p><p>Changing the protocol, population, or seed resets the simulations. Switching views pauses playback and preserves the comparison trajectory. The One round view has its own trajectory.</p><button class="button primary" id="close-about-bottom">Back to the simulation</button></dialog>
+</body>
+</html>
